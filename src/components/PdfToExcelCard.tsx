@@ -7,13 +7,26 @@ import { Textarea } from "@/components/ui/textarea";
 import UploadedFilePreview from "./UploadedFilePreview";
 import ConvertResultArea from "./ConvertResultArea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const AI_MODELS = [
-  { label: "OpenAI GPT-4o", value: "gpt-4o" },
-  { label: "Perplexity Llama-3", value: "llama-3" },
-  { label: "Claude 3 Sonnet", value: "claude-3-sonnet" },
-  { label: "Gemini 1.5 Pro", value: "gemini-1-5-pro" },
+  { label: "OpenAI GPT-4o", value: "gpt-4o", type: "openai" },
+  { label: "Perplexity Llama-3", value: "llama-3", type: "perplexity" },
+  { label: "Claude 3 Sonnet", value: "claude-3-sonnet", type: "claude" },
+  { label: "Gemini 1.5 Pro", value: "gemini-1-5-pro", type: "gemini" },
 ];
+
+type ModelType = "openai" | "perplexity" | "claude" | "gemini";
+
+type ModelSettings = {
+  [key: string]: {
+    // key is aiModel.value
+    apiKey?: string;
+    orgId?: string; // for openai if relevant
+    // Add more as needed per model
+    [key: string]: string | undefined;
+  };
+};
 
 const PdfToExcelCard: React.FC = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -22,6 +35,8 @@ const PdfToExcelCard: React.FC = () => {
   const [isConverting, setIsConverting] = useState(false);
   const [excelLink, setExcelLink] = useState<string>("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const [modelSettings, setModelSettings] = useState<ModelSettings>({});
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -49,6 +64,17 @@ const PdfToExcelCard: React.FC = () => {
     setExcelLink("");
   };
 
+  const handleSettingsChange = (field: string, value: string) => {
+    if (!aiModel) return;
+    setModelSettings((prev) => ({
+      ...prev,
+      [aiModel]: {
+        ...prev[aiModel],
+        [field]: value,
+      },
+    }));
+  };
+
   const onConvert = () => {
     setIsConverting(true);
     // Simulate async processing and output link (stub)
@@ -61,6 +87,80 @@ const PdfToExcelCard: React.FC = () => {
   const canConvert = pdfFile && aiModel && instructions.trim().length > 0 && !isConverting;
 
   const currentModel = AI_MODELS.find((m) => m.value === aiModel);
+
+  // Show the correct settings fields per model type
+  const renderSettingsFields = () => {
+    if (!aiModel) {
+      return (
+        <div className="p-3 bg-gray-50 rounded border border-gray-200 text-center text-gray-500 text-sm">
+          Please select an AI model first.
+        </div>
+      );
+    }
+    const modelType = currentModel?.type as ModelType;
+    // Retrieve saved settings for this model
+    const values = modelSettings[aiModel] || {};
+
+    switch (modelType) {
+      case "openai":
+        return (
+          <div className="flex flex-col gap-3">
+            <label className="block text-xs text-gray-500">OpenAI API Key</label>
+            <Input
+              type="text"
+              placeholder="sk-..."
+              value={values.apiKey || ""}
+              onChange={(e) => handleSettingsChange("apiKey", e.target.value)}
+            />
+            <label className="block text-xs text-gray-500">Organization ID (optional)</label>
+            <Input
+              type="text"
+              placeholder="org-..."
+              value={values.orgId || ""}
+              onChange={(e) => handleSettingsChange("orgId", e.target.value)}
+            />
+          </div>
+        );
+      case "perplexity":
+        return (
+          <div className="flex flex-col gap-3">
+            <label className="block text-xs text-gray-500">Perplexity API Key</label>
+            <Input
+              type="text"
+              placeholder="pk-..."
+              value={values.apiKey || ""}
+              onChange={(e) => handleSettingsChange("apiKey", e.target.value)}
+            />
+          </div>
+        );
+      case "claude":
+        return (
+          <div className="flex flex-col gap-3">
+            <label className="block text-xs text-gray-500">Claude API Key</label>
+            <Input
+              type="text"
+              placeholder="..."
+              value={values.apiKey || ""}
+              onChange={(e) => handleSettingsChange("apiKey", e.target.value)}
+            />
+          </div>
+        );
+      case "gemini":
+        return (
+          <div className="flex flex-col gap-3">
+            <label className="block text-xs text-gray-500">Gemini API Key</label>
+            <Input
+              type="text"
+              placeholder="AIza..."
+              value={values.apiKey || ""}
+              onChange={(e) => handleSettingsChange("apiKey", e.target.value)}
+            />
+          </div>
+        );
+      default:
+        return <div>No configurable settings for this model.</div>;
+    }
+  };
 
   return (
     <div className="w-full max-w-md shadow-2xl rounded-3xl bg-white px-7 py-8 animate-fade-in flex flex-col gap-5">
@@ -130,17 +230,14 @@ const PdfToExcelCard: React.FC = () => {
                 {currentModel ? `${currentModel.label} Settings` : "AI Model Settings"}
               </DialogTitle>
               <DialogDescription>
-                Here you can configure settings for the selected AI model.<br />
+                Set credentials and other info for the selected AI model.<br />
                 <span className="text-xs text-gray-500">
-                  (Settings placeholder)
+                  Credentials are used only in your browser and are not sent anywhere unless you use the model.
                 </span>
               </DialogDescription>
             </DialogHeader>
             <div className="mt-4 flex flex-col gap-2">
-              {/* Placeholder area for future settings */}
-              <div className="p-3 bg-gray-50 rounded border border-gray-200 text-center text-gray-500 text-sm">
-                No configurable settings for this model yet.
-              </div>
+              {renderSettingsFields()}
             </div>
             <DialogClose asChild>
               <Button className="mt-6 w-full" variant="outline">
