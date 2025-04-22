@@ -1,10 +1,12 @@
+
 import React, { useRef, useState } from "react";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import UploadedFilePreview from "./UploadedFilePreview";
 import ConvertResultArea from "./ConvertResultArea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 
 const AI_MODELS = [
   { label: "OpenAI GPT-4o", value: "gpt-4o" },
@@ -19,6 +21,7 @@ const PdfToExcelCard: React.FC = () => {
   const [instructions, setInstructions] = useState<string>("");
   const [isConverting, setIsConverting] = useState(false);
   const [excelLink, setExcelLink] = useState<string>("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -57,6 +60,8 @@ const PdfToExcelCard: React.FC = () => {
 
   const canConvert = pdfFile && aiModel && instructions.trim().length > 0 && !isConverting;
 
+  const currentModel = AI_MODELS.find((m) => m.value === aiModel);
+
   return (
     <div className="w-full max-w-md shadow-2xl rounded-3xl bg-white px-7 py-8 animate-fade-in flex flex-col gap-5">
       <h1 className="text-3xl font-bold text-center mb-2 text-[#9b87f5] tracking-tight">KDH LV-App</h1>
@@ -86,21 +91,64 @@ const PdfToExcelCard: React.FC = () => {
         </label>
       )}
 
-      {/* MODEL SELECT */}
+      {/* MODEL SELECT with settings */}
       <div>
         <label className="block mb-1 text-sm font-medium text-[#6E59A5]">AI Model</label>
-        <Select value={aiModel} onValueChange={setAiModel}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select AI model" />
-          </SelectTrigger>
-          <SelectContent className="z-20 bg-white">
-            {AI_MODELS.map((model) => (
-              <SelectItem key={model.value} value={model.value}>
-                {model.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <Select value={aiModel} onValueChange={setAiModel}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select AI model" />
+              </SelectTrigger>
+              <SelectContent className="z-20 bg-white">
+                {AI_MODELS.map((model) => (
+                  <SelectItem key={model.value} value={model.value}>
+                    {model.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="text-[#9b87f5] hover:bg-[#f4f0ff] ml-1"
+            title="AI Model settings"
+            onClick={() => setSettingsOpen(true)}
+            disabled={!aiModel}
+            aria-label="AI Model settings"
+          >
+            <Settings className="w-5 h-5" />
+          </Button>
+        </div>
+        {/* Settings dialog */}
+        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {currentModel ? `${currentModel.label} Settings` : "AI Model Settings"}
+              </DialogTitle>
+              <DialogDescription>
+                Here you can configure settings for the selected AI model.<br />
+                <span className="text-xs text-gray-500">
+                  (Settings placeholder)
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4 flex flex-col gap-2">
+              {/* Placeholder area for future settings */}
+              <div className="p-3 bg-gray-50 rounded border border-gray-200 text-center text-gray-500 text-sm">
+                No configurable settings for this model yet.
+              </div>
+            </div>
+            <DialogClose asChild>
+              <Button className="mt-6 w-full" variant="outline">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* INSTRUCTIONS */}
