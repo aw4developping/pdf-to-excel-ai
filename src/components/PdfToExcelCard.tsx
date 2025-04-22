@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Upload, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,7 +59,7 @@ const PdfToExcelCard: React.FC = () => {
 
   return (
     <div className="w-full max-w-md shadow-2xl rounded-3xl bg-white px-7 py-8 animate-fade-in flex flex-col gap-5">
-      <h1 className="text-3xl font-bold text-center mb-2 text-[#9b87f5] tracking-tight">PDF to Excel AI Converter</h1>
+      <h1 className="text-3xl font-bold text-center mb-2 text-[#9b87f5] tracking-tight">KDH LV-App</h1>
 
       {/* PDF UPLOAD */}
       {pdfFile ? (
